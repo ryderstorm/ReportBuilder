@@ -69,7 +69,7 @@ module ReportBuilder
 
     def get(template)
       @erb ||= {}
-      @erb[template] ||= ERB.new(File.read(File.dirname(__FILE__) + '/../../template/' + template + '.erb'), nil, nil, '_' + template)
+      @erb[template] ||= ERB.new(File.read(File.dirname(__FILE__) + '/../../template/' + template + '.erb', ), nil, nil, '_' + template).encode('UTF-8')
     rescue => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
       puts e.backtrace
