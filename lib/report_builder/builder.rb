@@ -41,10 +41,13 @@ module ReportBuilder
 
       html_report_path = options[:html_report_path] || options[:report_path]
       if options[:report_types].include? 'HTML'
+        puts "Content of html report BEFORE writing more content:".yellow
+        puts File.read(html_report_path + '.html').cyan
         File.open(html_report_path + '.html', 'w') do |file|
           begin
-            content_to_write = get(groups.size > 1 ? 'group_report' : 'report').result(binding).gsub('  ', '').gsub("\n\n", '').encode('UTF-8')
-            file.write(content_to_write)
+            content_to_write = get(groups.size > 1 ? 'group_report' : 'report').result(binding).gsub('  ', '').gsub("\n\n", '')
+            puts "Content encoding: #{content_to_write.encoding}"
+            file.write(content_to_write.encode('UTF-8'))
           rescue => e
             puts "Error writing content to html report. Content was:\n#{content_to_write.cyan}"
             raise e
