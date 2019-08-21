@@ -1,4 +1,5 @@
 require 'awesome_print'
+require 'colorize'
 require 'json'
 require 'erb'
 require 'pathname'
@@ -41,7 +42,13 @@ module ReportBuilder
       html_report_path = options[:html_report_path] || options[:report_path]
       if options[:report_types].include? 'HTML'
         File.open(html_report_path + '.html', 'w') do |file|
-          file.write get(groups.size > 1 ? 'group_report' : 'report').result(binding).gsub('  ', '').gsub("\n\n", '')
+          begin
+            content_to_write = get(groups.size > 1 ? 'group_report' : 'report').result(binding).gsub('  ', '').gsub("\n\n", '').encode('UTF-8')
+            file.write(content_to_write)
+          rescue => e
+            puts "Error writing content to html report. Content was:\n#{content_to_write.cyan}"
+            raise e
+          end
         end
       end
 
