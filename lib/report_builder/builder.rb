@@ -21,7 +21,7 @@ module ReportBuilder
     def build_report
       options = ReportBuilder.options
       puts "Using ReportBuilder.options:\n#{options.ai}"
-      
+
       groups = get_groups options[:input_path]
 
       json_report_path = options[:json_report_path] || options[:report_path]
@@ -47,7 +47,7 @@ module ReportBuilder
             puts "Content encoding: #{content_to_write.encoding}"
             file.write(content_to_write.encode('UTF-8'))
           rescue => e
-            puts "Error writing content to html report. Content was:\n#{content_to_write.cyan}"
+            puts "\n-----\nError writing content to html report. Content was:\n#{content_to_write}\n-----".cyan
             raise e
           end
         end
@@ -69,19 +69,20 @@ module ReportBuilder
       end
       [json_report_path, html_report_path, retry_report_path]
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
     private
 
     def get(template)
       @erb ||= {}
-      @erb[template] ||= ERB.new(File.read(File.dirname(__FILE__) + '/../../template/' + template + '.erb', ), nil, nil, '_' + template).encode('UTF-8')
+      erb_input = File.read(File.dirname(__FILE__) + '/../../template/' + template + '.erb', )
+      @erb[template] ||= ERB.new(erb_input, nil, nil, '_' + template)
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
 
@@ -100,9 +101,9 @@ module ReportBuilder
       end
       groups
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
     def get_files(path)
@@ -128,9 +129,9 @@ module ReportBuilder
         []
       end.uniq
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
     def get_features(files)
@@ -228,9 +229,9 @@ module ReportBuilder
         feature.merge! 'status' => feature_status(feature), 'duration' => total_time(feature['elements'])
       end
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
     def feature_status(feature)
@@ -250,9 +251,9 @@ module ReportBuilder
       end
       'passed'
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
     def decode_image(data)
@@ -268,17 +269,17 @@ module ReportBuilder
         ''
       end
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
     def decode_text(data)
       Base64.urlsafe_decode64 data rescue ''
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
     def decode_embedding(embedding)
@@ -289,9 +290,9 @@ module ReportBuilder
       end
       embedding
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
     def total_time(data)
@@ -299,9 +300,9 @@ module ReportBuilder
       data.each {|item| total_time += item['duration']}
       total_time
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
 
     def duration(ms)
@@ -316,9 +317,9 @@ module ReportBuilder
         "#{'%.3f' % s}s"
       end
     rescue => e
-      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
-      raise e  
+      raise e
     end
   end
 end
