@@ -1,3 +1,4 @@
+require 'awesome_print'
 require 'json'
 require 'erb'
 require 'pathname'
@@ -18,7 +19,8 @@ module ReportBuilder
     #
     def build_report
       options = ReportBuilder.options
-
+      puts "Using ReportBuilder.options:\n#{options.ai}"
+      
       groups = get_groups options[:input_path]
 
       json_report_path = options[:json_report_path] || options[:report_path]
@@ -58,14 +60,22 @@ module ReportBuilder
         end
       end
       [json_report_path, html_report_path, retry_report_path]
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
-
     private
 
     def get(template)
       @erb ||= {}
       @erb[template] ||= ERB.new(File.read(File.dirname(__FILE__) + '/../../template/' + template + '.erb'), nil, nil, '_' + template)
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
+
 
     def get_groups(input_path)
       groups = []
@@ -81,6 +91,10 @@ module ReportBuilder
         groups << {'features' => get_features(files)}
       end
       groups
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
 
     def get_files(path)
@@ -105,6 +119,10 @@ module ReportBuilder
       else
         []
       end.uniq
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
 
     def get_features(files)
@@ -201,6 +219,10 @@ module ReportBuilder
         end
         feature.merge! 'status' => feature_status(feature), 'duration' => total_time(feature['elements'])
       end
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
 
     def feature_status(feature)
@@ -219,6 +241,10 @@ module ReportBuilder
         return status unless status == 'passed'
       end
       'passed'
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
 
     def decode_image(data)
@@ -233,10 +259,18 @@ module ReportBuilder
       else
         ''
       end
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
 
     def decode_text(data)
       Base64.urlsafe_decode64 data rescue ''
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
 
     def decode_embedding(embedding)
@@ -246,12 +280,20 @@ module ReportBuilder
         embedding['data'] = decode_text(embedding['data'])
       end
       embedding
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
 
     def total_time(data)
       total_time = 0
       data.each {|item| total_time += item['duration']}
       total_time
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
 
     def duration(ms)
@@ -265,6 +307,10 @@ module ReportBuilder
       else
         "#{'%.3f' % s}s"
       end
+    rescue => e
+      puts "Error in method [#{__method__}] in file [#{__FILE__}]".red
+      puts e.backtrace
+      raise e  
     end
   end
 end
