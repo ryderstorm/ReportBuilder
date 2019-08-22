@@ -80,7 +80,7 @@ module ReportBuilder
       @erb ||= {}
       erb_input = File.read(File.dirname(__FILE__) + '/../../template/' + template + '.erb')
       @erb[template] ||= ERB.new(erb_input, nil, nil, '_' + template)
-      puts "@erb[template]:\n#{@erb[template].ai}"
+      puts "@erb[template].encoding:\n#{@erb[template].encoding}"
       @erb[template]
     rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
