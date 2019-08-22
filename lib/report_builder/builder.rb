@@ -43,7 +43,7 @@ module ReportBuilder
       if options[:report_types].include? 'HTML'
         File.open(html_report_path + '.html', 'w') do |file|
           begin
-            content_to_write = get(groups.size > 1 ? 'group_report' : 'report').result(binding).force_encoding(Encoding::UTF_8)
+            content_to_write = get(groups.size > 1 ? 'group_report' : 'report').force_encoding(Encoding::UTF_8).result(binding)
             content_to_write.gsub!('  ', '').gsub!("\n\n", '')
             puts "Content encoding: #{content_to_write.encoding}"
             file.write(content_to_write.encode('UTF-8'))
