@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'awesome_print'
 require 'colorize'
 require 'json'
@@ -9,12 +11,10 @@ require 'ostruct'
 require 'report_builder/core-ext/hash'
 
 module ReportBuilder
-
   ##
   # ReportBuilder Main class
   #
   class Builder
-
     ##
     # ReportBuilder Main method
     #
@@ -31,11 +31,11 @@ module ReportBuilder
         end
       end
 
-      if options[:additional_css] and Pathname.new(options[:additional_css]).file?
+      if options[:additional_css] && Pathname.new(options[:additional_css]).file?
         options[:additional_css] = File.read(options[:additional_css])
       end
 
-      if options[:additional_js] and Pathname.new(options[:additional_js]).file?
+      if options[:additional_js] && Pathname.new(options[:additional_js]).file?
         options[:additional_js] = File.read(options[:additional_js])
       end
 
@@ -47,7 +47,7 @@ module ReportBuilder
             content_to_write.gsub!('  ', '').gsub!("\n\n", '')
             puts "Content encoding: #{content_to_write.encoding}"
             file.write(content_to_write.encode('UTF-8'))
-          rescue => e
+          rescue StandardError => e
             puts "\n-----\nError writing content to html report. Content was:\n#{content_to_write}\n-----".cyan
             raise e
           end
@@ -59,33 +59,32 @@ module ReportBuilder
         File.open(retry_report_path + '.retry', 'w') do |file|
           groups.each do |group|
             group['features'].each do |feature|
-              if feature['status'] == 'broken'
-                feature['elements'].each do |scenario|
-                  file.puts "#{feature['uri']}:#{scenario['line']}" if scenario['status'] == 'failed'
-                end
+              next unless feature['status'] == 'broken'
+              feature['elements'].each do |scenario|
+                file.puts "#{feature['uri']}:#{scenario['line']}" if scenario['status'] == 'failed'
               end
             end
           end
         end
       end
       [json_report_path, html_report_path, retry_report_path]
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
     end
+
     private
 
     def get(template)
       @erb ||= {}
-      erb_input = File.read(File.dirname(__FILE__) + '/../../template/' + template + '.erb', )
+      erb_input = File.read(File.dirname(__FILE__) + '/../../template/' + template + '.erb')
       @erb[template] ||= ERB.new(erb_input, nil, nil, '_' + template)
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
     end
-
 
     def get_groups(input_path)
       groups = []
@@ -93,22 +92,23 @@ module ReportBuilder
         input_path.each do |group_name, group_path|
           files = get_files group_path
           puts "Error:: No file(s) found at #{group_path}" if files.empty?
-          groups << {'name' => group_name, 'features' => get_features(files)}
+          groups << { 'name' => group_name, 'features' => get_features(files) }
         end
       else
         files = get_files input_path
         raise "Error:: No file(s) found at #{input_path}" if files.empty?
-        groups << {'features' => get_features(files)}
+
+        groups << { 'features' => get_features(files) }
       end
       groups
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
     end
 
     def get_files(path)
-      if path.is_a?(String) and Pathname.new(path).exist?
+      if path.is_a?(String) && Pathname.new(path).exist?
         if Pathname.new(path).directory?
           Dir.glob("#{path}/*.json")
         else
@@ -129,7 +129,7 @@ module ReportBuilder
       else
         []
       end.uniq
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
@@ -139,6 +139,7 @@ module ReportBuilder
       files.each_with_object([]) do |file, features|
         data = File.read(file)
         next if data.empty?
+
         begin
           features << JSON.parse(data)
         rescue StandardError
@@ -148,18 +149,18 @@ module ReportBuilder
       end.flatten.group_by do |feature|
         feature['uri'] + feature['id'] + feature['line'].to_s
       end.values.each_with_object([]) do |group, features|
-        features << group.first.except('elements').merge('elements' => group.map {|feature| feature['elements']}.flatten)
+        features << group.first.except('elements').merge('elements' => group.map { |feature| feature['elements'] }.flatten)
       end.sort_by! do |feature|
         feature['name']
       end.each do |feature|
         feature['name'] = ERB::Util.html_escape feature['name']
         if feature['elements'][0]['type'] == 'background'
-          (0..feature['elements'].size-1).step(2) do |i|
+          (0..feature['elements'].size - 1).step(2) do |i|
             feature['elements'][i]['steps'] ||= []
-            feature['elements'][i]['steps'].each {|step| step['name'] += (' (' + feature['elements'][i]['keyword'] + ')')}
-            if feature['elements'][i+1]
-              feature['elements'][i+1]['steps'] = feature['elements'][i]['steps'] + feature['elements'][i+1]['steps']
-              feature['elements'][i+1]['before'] = feature['elements'][i]['before'] if feature['elements'][i]['before']
+            feature['elements'][i]['steps'].each { |step| step['name'] += (' (' + feature['elements'][i]['keyword'] + ')') }
+            if feature['elements'][i + 1]
+              feature['elements'][i + 1]['steps'] = feature['elements'][i]['steps'] + feature['elements'][i + 1]['steps']
+              feature['elements'][i + 1]['before'] = feature['elements'][i]['before'] if feature['elements'][i]['before']
             end
           end
           feature['elements'].reject! do |element|
@@ -222,14 +223,12 @@ module ReportBuilder
           the_scenario = scenario_group.find do |scenario|
             scenario['status'] == 'passed'
           end || scenario_group.first
-          if scenario_group.size > 1
-            the_scenario['name'] += " (x#{scenario_group.size})"
-          end
+          the_scenario['name'] += " (x#{scenario_group.size})" if scenario_group.size > 1
           the_scenario
         end
         feature.merge! 'status' => feature_status(feature), 'duration' => total_time(feature['elements'])
       end
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
@@ -240,7 +239,8 @@ module ReportBuilder
       feature['elements'].each do |scenario|
         status = scenario['status']
         return 'broken' if status == 'failed'
-        feature_status = 'incomplete' if %w(undefined pending).include?(status)
+
+        feature_status = 'incomplete' if %w[undefined pending].include?(status)
       end
       feature_status
     end
@@ -251,7 +251,7 @@ module ReportBuilder
         return status unless status == 'passed'
       end
       'passed'
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
@@ -260,7 +260,11 @@ module ReportBuilder
     def decode_image(data)
       base64 = %r{^([A-Za-z0-9+\/]{4})*([A-Za-z0-9+\/]{4}|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}==)$}
       if data =~ base64
-        data_base64 = Base64.urlsafe_decode64(data).gsub(%r{^data:image\/(png|gif|jpg|jpeg)\;base64,}, '') rescue data
+        data_base64 = begin
+                        Base64.urlsafe_decode64(data).gsub(%r{^data:image\/(png|gif|jpg|jpeg)\;base64,}, '')
+                      rescue
+                        data
+                      end
         if data_base64 =~ base64
           data_base64
         else
@@ -269,28 +273,32 @@ module ReportBuilder
       else
         ''
       end
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
     end
 
     def decode_text(data)
-      Base64.urlsafe_decode64 data rescue ''
-    rescue => e
+      begin
+        Base64.urlsafe_decode64 data
+      rescue
+        ''
+      end
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
     end
 
     def decode_embedding(embedding)
-      if embedding['mime_type'] =~ /^image\/(png|gif|jpg|jpeg)/
+      if embedding['mime_type'] =~ %r{^image/(png|gif|jpg|jpeg)}
         embedding['data'] = decode_image(embedding['data'])
-      elsif embedding['mime_type'] =~ /^text\/(plain|html)/
+      elsif embedding['mime_type'] =~ %r{^text/(plain|html)}
         embedding['data'] = decode_text(embedding['data'])
       end
       embedding
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
@@ -298,16 +306,16 @@ module ReportBuilder
 
     def total_time(data)
       total_time = 0
-      data.each {|item| total_time += item['duration']}
+      data.each { |item| total_time += item['duration'] }
       total_time
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
     end
 
     def duration(ms)
-      s = ms.to_f/1000000000
+      s = ms.to_f / 1_000_000_000
       m, s = s.divmod(60)
       if m > 59
         h, m = m.divmod(60)
@@ -317,7 +325,7 @@ module ReportBuilder
       else
         "#{'%.3f' % s}s"
       end
-    rescue => e
+    rescue StandardError => e
       puts "Error in method [#{__method__}] in file [#{__FILE__}]:\n#{e.class}: #{e.message}".red
       puts e.backtrace
       raise e
