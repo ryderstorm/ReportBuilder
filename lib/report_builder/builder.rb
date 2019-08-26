@@ -60,6 +60,7 @@ module ReportBuilder
           groups.each do |group|
             group['features'].each do |feature|
               next unless feature['status'] == 'broken'
+
               feature['elements'].each do |scenario|
                 file.puts "#{feature['uri']}:#{scenario['line']}" if scenario['status'] == 'failed'
               end
